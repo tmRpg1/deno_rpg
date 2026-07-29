@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Путник из Рукелена</title>
+
+<style>
+body{
+    background:#111;
+    color:#ddd;
+    font-family:Georgia,serif;
+    max-width:1000px;
+    margin:20px auto;
+    padding:20px;
+}
+
+h1{
+    color:#d8b26e;
+}
+
+#stats,#quests{
+    border:1px solid #555;
+    padding:10px;
+    margin-bottom:15px;
+}
+
+#text{
+    min-height:180px;
+    margin-bottom:15px;
+    line-height:1.6;
+}
+
+button{
+    display:block;
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    background:#333;
+    color:white;
+    border:1px solid #666;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#444;
+}
+</style>
+</head>
+<body>
+
+<h1>Путник из Рукелена</h1>
+
+<div id="stats">
+    ❤️ HP: <span id="hp">100</span><br>
+    ⭐ Уровень: <span id="level">1</span><br>
+    📖 Опыт: <span id="xp">0</span>/100<br>
+    💪 Сила: <span id="str">1</span><br>
+    🏃 Ловкость: <span id="agi">1</span><br>
+    🍀 Удача: <span id="luck">1</span><br>
+    🪙 Медь: <span id="copper">0</span><br>
+    🥇 Золото: <span id="gold">0</span><br>
+    ⚔ Оружие: <span id="weapon">Нет</span><br>
+    🎒 Инвентарь: <span id="inventory">Пусто</span>
+</div>
+
+<div id="quests">
+    <b>Квесты:</b>
+    <ul id="questList"></ul>
+</div>
+
+<div id="text"></div>
+<div id="choices"></div>
+<button onclick="openInventory()">🎒 Инвентарь</button>
+<script>
+
+const player = {
+    hp:100,
+    maxHp:100,
+
+    level:1,
+    xp:0,
+
+    str:1,
+    agi:1,
+    luck:1,
+
+    copper:0,
+    gold:0,
+
+    weapon:null,
+
+    inventory:[],
+    quests:[]
+};
+
+const flags = {
+    house2:false,
+    house4:false,
+
+    tavernQuest:false,
+    tavernQuestDone:false,
+
+    flowerQuest:false,
+    flowerQuestDone:false,
+
+    chest:false,
+    flower:false
+};
+
+function updateStats(){
+
+    hp.textContent = player.hp;
+    level.textContent = player.level;
+    xp.textContent = player.xp;
+
+    str.textContent = player.str;
+    agi.textContent = player.agi;
+    luck.textContent = player.luck;
+
+    copper.textContent = player.copper;
+    gold.textContent = player.gold;
+
+    weapon.textContent =
+        player.weapon || "Нет";
+
+    inventory.textContent =
+        player.inventory.length
+        ? player.inventory.join(", ")
+        : "Пусто";
+
+    renderQuests();
+}
+
+function renderQuests(){
+
+    const q = document.getElementById("questList");
+
+    q.innerHTML="";
+
+    player.quests.forEach(item=>{
+
+        const li=document.createElement("li");
+
+        li.textContent=item;
+
+        q.appendChild(li);
+    });
+}
+
+function gainXP(amount){
+
+    player.xp += amount;
+
+    while(player.xp >= 100){
+
+        player.xp -= 100;
+
+        player.level++;
+
+        player.str++;
+        player.maxHp += 10;
+        player.hp += 10;
+
+        alert(
+        "Уровень повышен!\n" +
+        "Сила +1\n" +
+        "Макс HP +10"
+        );
+    }
+}
+
+function showScene(text,choices){
+
+    document.getElementById("text").innerHTML=text;
+
+    const box =
+    document.getElementById("choices");
+
+    box.innerHTML="";
+
+    choices.forEach(c=>{
+
+        const btn =
+        document.createElement("button");
+
+        btn.textContent = c.text;
+
+        btn.onclick = c.action;
+
+        box.appendChild(btn);
+    });
+
+    updateStats();
+}
+function openInventory(){
+
+    let text = "Инвентарь:\n\n";
+
+    if(player.inventory.length === 0){
+
+        text += "Пусто";
+
+        showScene(
+            text,
+            [
+                {
+                    text:"Закрыть",
+                    action:surdal
+                }
+            ]
+        );
+
+        return;
+    }
+
+    let buttons = [];
+
+    player.inventory.forEach((item,index)=>{
+
+        buttons.push({
+
+            text:item,
+
+            action:function(){
+
+                useItem(index);
+
+            }
+
+        });
+
+    });
+
+    buttons.push({
+
+        text:"Закрыть",
+
+        action:surdal
+
+    });
+
+    showScene(text,buttons);
+}
+function useItem(index){
+
+    let item = player.inventory[index];
+
+    if(item === "Малый эликсир"){
+
+        player.hp =
+        Math.min(
+            player.maxHp,
+            player.hp + 50
+        );
+
+        player.inventory.splice(index,1);
+
+        alert(
+        "Вы выпили малый эликсир.\n+50 HP"
+        );
+
+        openInventory();
+
+        return;
+    }
+
+    if(item === "Яблоко"){
+
+        player.hp =
+        Math.min(
+            player.maxHp,
+            player.hp + 24
+        );
+
+        player.inventory.splice(index,1);
+
+        openInventory();
+
+        return;
+    }
+
+    if(item === "Сыр"){
+
+        player.hp =
+        Math.min(
+            player.maxHp,
+            player.hp + 40
+        );
+
+        player.inventory.splice(index,1);
+
+        openInventory();
+
+        return;
+    }
+
+    if(item === "Молоко"){
+
+        player.hp =
+        Math.min(
+            player.maxHp,
+            player.hp + 34
+        );
+
+        player.inventory.splice(index,1);
+
+        openInventory();
+
+        return;
+    }
+
+    alert("Этот предмет пока нельзя использовать.");
+}
+function startGame(){
+
+    showScene(
+
+    `
+    Вы покинули город Рукелен.
+
+    Денег почти не осталось.
+
+    После нескольких дней пути вы замечаете
+    заброшенную деревню.
+    `,
+
+    [
+        {
+            text:"Войти в деревню",
+            action:village
+        }
+    ]
+
+    );
+}
+
+function village(){
+
+    showScene(
+
+    `
+    Перед вами заброшенная деревня.
+
+    Из 11 домов целыми выглядят только четыре.
+    `,
+
+    [
+        {
+            text:"Дом №1",
+            action:house1
+        },
+
+        {
+            text:"Дом №2",
+            action:house2
+        },
+
+        {
+            text:"Дом №3",
+            action:house3
+        },
+
+        {
+            text:"Дом №4",
+            action:house4
+        },
+
+        {
+            text:"Покинуть деревню",
+            action:roadChoice
+        }
+    ]
+
+    );
+}
+function house1(){
+
+    showScene(
+
+    `
+    Внутри царит полный беспорядок.
+
+    Перевёрнутая мебель,
+    разбитая посуда и следы разграбления.
+
+    Ничего ценного нет.
+    `,
+
+    [
+        {
+            text:"Назад",
+            action:village
+        }
+    ]
+
+    );
+}
+
+function house2(){
+
+    if(!flags.house2){
+
+        flags.house2 = true;
+
+        player.copper += 41;
+
+        gainXP(10);
+
+        showScene(
+
+        `
+        Под половицей вы находите тайник.
+
+        Получено:
+        41 медная монета.
+
+        Опыт +10
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+
+    }else{
+
+        showScene(
+
+        `
+        Тайник уже пуст.
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+    }
+}
+
+function house4(){
+
+    if(!flags.house4){
+
+        flags.house4 = true;
+
+        player.inventory.push(
+            "Чёрствый хлеб"
+        );
+
+        showScene(
+
+        `
+        На столе лежит
+        чёрствый кусок хлеба.
+
+        Он отправляется
+        в ваш инвентарь.
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+
+    }else{
+
+        showScene(
+
+        `
+        Здесь больше ничего нет.
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+    }
+}
+
+function house3(){
+
+    showScene(
+
+    `
+    Дом выглядит пустым.
+
+    В полу вы замечаете люк.
+    Он ведёт в подвал.
+    `,
+
+    [
+        {
+            text:"Спуститься",
+            action:basement
+        },
+
+        {
+            text:"Назад",
+            action:village
+        }
+    ]
+
+    );
+}
+
+function basement(){
+
+    showScene(
+
+    `
+    Вы спускаетесь вниз.
+
+    Из темноты появляется ВУРДАЛАК!
+    `,
+
+    [
+        {
+            text:"Убежать",
+            action:runGhoul
+        },
+
+        {
+            text:"Оттолкнуть",
+            action:pushGhoul
+        },
+
+        {
+            text:"Проскользнуть мимо",
+            action:sneakGhoul
+        }
+    ]
+
+    );
+}
+
+function runGhoul(){
+
+    let roll =
+    Math.random()*100;
+
+    if(roll < 40){
+
+        gainXP(30);
+
+        showScene(
+
+        `
+        Вы успеваете выбраться.
+
+        Опыт +30
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+
+    }else{
+
+        player.hp -= 20;
+
+        gainXP(30);
+
+        checkDeath();
+
+        showScene(
+
+        `
+        Вурдалак успел ранить вас.
+
+        Потеряно 20 HP.
+
+        Опыт +30
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+    }
+}
+
+function pushGhoul(){
+
+    let roll =
+    Math.random()*100;
+
+    if(roll < 40){
+
+        gainXP(30);
+
+        showScene(
+
+        `
+        Вы отталкиваете вурдалака
+        и спасаетесь.
+
+        Опыт +30
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+
+    }else{
+
+        player.hp -= 20;
+
+        checkDeath();
+
+        showScene(
+
+        `
+        Вурдалак зацепил вас когтями.
+
+        Потеряно 20 HP.
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+    }
+}
+
+function sneakGhoul(){
+
+    let roll =
+    Math.random()*100;
+
+    if(roll < 20){
+
+        player.hp -= 20;
+
+        checkDeath();
+
+        showScene(
+
+        `
+        Вы вырвались наружу.
+
+        Но получили ранение.
+
+        Потеряно 20 HP.
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+
+    }else{
+
+        gainXP(30);
+
+        showScene(
+
+        `
+        Вы успешно скрылись.
+
+        Опыт +30
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:village
+            }
+        ]
+
+        );
+    }
+}
+
+function roadChoice(){
+
+    showScene(
+
+    `
+    Покинув деревню,
+    вы выходите к развилке.
+
+    Куда идти?
+    `,
+
+    [
+        {
+            text:"Старый тракт",
+            action:roadToSurdal
+        },
+
+        {
+            text:"Через лес",
+            action:goblins
+        }
+    ]
+
+    );
+}
+
+function roadToSurdal(){
+
+    player.hp -= 10;
+
+    checkDeath();
+
+    showScene(
+
+    `
+    Три дня вы идёте по тракту.
+
+    Жара и усталость
+    изматывают вас.
+
+    Потеряно 10 HP.
+
+    Вскоре вы прибываете
+    в город Сурдаль.
+    `,
+
+    [
+        {
+            text:"Войти в Сурдаль",
+            action:surdal
+        }
+    ]
+
+    );
+}
+
+function goblins(){
+
+    showScene(
+
+    `
+    Из кустов выходят гоблины.
+
+    — Кошелёк или жизнь!
+    `,
+
+    [
+        {
+            text:"Драться",
+            action:fightGoblins
+        },
+
+        {
+            text:"Бежать",
+            action:runGoblins
+        }
+    ]
+
+    );
+}
+
+function fightGoblins(){
+
+    let roll =
+    Math.random()*100;
+
+    if(roll < 60){
+
+        player.hp -= 65;
+
+        player.copper =
+        Math.max(
+            0,
+            player.copper - 20
+        );
+
+        gainXP(50);
+
+        checkDeath();
+
+        showScene(
+
+        `
+        Вы победили гоблинов.
+
+        Потеряно 65 HP.
+
+        Потеряно 20 медных.
+
+        Опыт +50.
+        `,
+
+        [
+            {
+                text:"В Сурдаль",
+                action:surdal
+            }
+        ]
+
+        );
+
+    }else if(roll < 90){
+
+        showScene(
+
+        `
+        Вам удалось убежать.
+        `,
+
+        [
+            {
+                text:"В Сурдаль",
+                action:surdal
+            }
+        ]
+
+        );
+
+    }else{
+
+        gameOver(
+        "Гоблины убили вас."
+        );
+    }
+}
+
+function runGoblins(){
+
+    let roll =
+    Math.random()*100;
+
+    if(roll < 70){
+
+        showScene(
+
+        `
+        Вы успешно скрылись.
+        `,
+
+        [
+            {
+                text:"В Сурдаль",
+                action:surdal
+            }
+        ]
+
+        );
+
+    }else{
+
+        player.hp -= 82;
+
+        player.copper = 0;
+        player.gold = 0;
+
+        if(player.hp <= 0){
+
+            gameOver(
+            "Вы погибли от ран."
+            );
+
+            return;
+        }
+
+        showScene(
+
+        `
+        Гоблины догнали вас.
+
+        Потеряно 82 HP.
+
+        Потеряны все деньги.
+        `,
+
+        [
+            {
+                text:"В Сурдаль",
+                action:surdal
+            }
+        ]
+
+        );
+    }
+}
+
+function surdal(){
+
+    const choices = [
+
+        {
+            text:"Таверна",
+            action:tavern
+        },
+
+        {
+            text:"Алхимик",
+            action:alchemist
+        },
+
+        {
+            text:"Ферма Шорфирина",
+            action:farm
+        },
+
+        {
+            text:"Кузница",
+            action:blacksmith
+        }
+
+    ];
+
+    // Лесопилка доступна после получения квеста
+    if(flags.tavernQuest && !flags.chest){
+
+        choices.push({
+
+            text:"Лесопилка",
+            action:sawmill
+
+        });
+
+    }
+
+    // После получения квеста алхимика
+    if(flags.flowerQuest && !flags.flower){
+
+        choices.push({
+
+            text:"Старые виселицы",
+            action:gallows
+
+        });
+
+    }
+
+    showScene(
+
+    `
+    Вы прибыли в Сурдаль.
+
+    Небольшой, но оживлённый город.
+
+    В центре расположена таверна.
+    Неподалёку дымит кузница.
+    На окраине работает алхимик,
+    а за городом находятся фермы.
+
+    Что вы будете делать?
+    `,
+
+    choices
+
+    );
+}function tavern(){
+
+    if(!flags.tavernQuest){
+
+        flags.tavernQuest = true;
+
+        player.inventory.push(
+            "Письмо тавернщика"
+        );
+
+        player.quests.push(
+            "Передать письмо на лесопилку"
+        );
+
+        showScene(
+
+        `
+        — Я вижу, тебе нужна работа?
+
+        Передай это письмо
+        моему помощнику на лесопилке.
+
+        Потом забери маленький сундук
+        и принеси его мне.
+
+        Награда: 10 золотых.
+        `,
+
+        [
+            {
+                text:"Покинуть таверну",
+                action:surdal
+            },
+
+            {
+                text:"Идти на лесопилку",
+                action:sawmill
+            }
+        ]
+
+        );
+
+    }else{
+
+        if(flags.chest &&
+           !flags.tavernQuestDone){
+
+            flags.tavernQuestDone = true;
+
+            player.gold += 10;
+
+            gainXP(75);
+
+            player.quests =
+            player.quests.filter(
+            q=>q!=="Передать письмо на лесопилку"
+            );
+
+            showScene(
+
+            `
+            — Отлично.
+
+            Ты принёс сундук.
+
+            Получено:
+            10 золотых.
+
+            Опыт +75.
+            `,
+
+            [
+                {
+                    text:"Назад",
+                    action:surdal
+                }
+            ]
+
+            );
+
+        }else{
+
+            showScene(
+
+            `
+            В таверне шумно.
+
+            Тавернщик занят.
+            `,
+
+            [
+                {
+                    text:"Назад",
+                    action:surdal
+                }
+            ]
+
+            );
+        }
+    }
+}
+
+function sawmill(){
+
+    flags.chest = true;
+
+    showScene(
+
+    `
+    Вы приходите на лесопилку.
+
+    — Меня прислал трактирщик.
+
+    Рабочий читает письмо
+    и вручает вам маленький сундук.
+    `,
+
+    [
+        {
+            text:"Вернуться в Сурдаль",
+            action:surdal
+        }
+    ]
+
+    );
+}
+
+function alchemist(){
+
+    showScene(
+
+    `
+    Перед вами лавка алхимика.
+    `,
+
+    [
+        {
+            text:"Купить малый эликсир (1.5 золота)",
+            action:buyPotion
+        },
+
+        {
+            text:"Попросить работу",
+            action:flowerQuest
+        },
+
+        {
+            text:"Сдать Злотоцвет",
+            action:completeFlowerQuest
+        },
+
+        {
+            text:"Назад",
+            action:surdal
+        }
+    ]
+
+    );
+}
+
+function buyPotion(){
+
+    if(player.gold >= 1.5){
+
+        player.gold -= 1.5;
+
+        player.inventory.push(
+            "Малый эликсир"
+        );
+
+        alert("Эликсир куплен.");
+
+    }else{
+
+        alert("Недостаточно золота.");
+    }
+
+    alchemist();
+}
+
+function flowerQuest(){
+
+    if(!flags.flowerQuest){
+
+        flags.flowerQuest = true;
+
+        player.quests.push(
+            "Найти Злотоцвет"
+        );
+    }
+
+    showScene(
+
+    `
+    — Найди мне Злотоцвет.
+
+    Иди по тракту до старых виселиц.
+
+    Затем сверни на тропу.
+
+    Будь осторожен —
+    там много вурдалаков.
+    `,
+
+    [
+        {
+            text:"Идти к виселице",
+            action:gallows
+        },
+
+        {
+            text:"Назад",
+            action:surdal
+        }
+    ]
+
+    );
+}
+
+function completeFlowerQuest(){
+
+    if(flags.flower &&
+       !flags.flowerQuestDone){
+
+        flags.flowerQuestDone = true;
+
+        player.gold += 40;
+
+        gainXP(100);
+
+        player.quests =
+        player.quests.filter(
+        q=>q!=="Найти Злотоцвет"
+        );
+
+        showScene(
+
+        `
+        — Отличная работа.
+
+        Получено:
+        40 золотых.
+
+        Опыт +100.
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:surdal
+            }
+        ]
+
+        );
+
+    }else{
+
+        alert(
+        "У вас нет Злотоцвета."
+        );
+
+        alchemist();
+    }
+}
+
+function gallows(){
+
+    showScene(
+
+    `
+    Перед вами старые виселицы.
+
+    Дерево почернело от времени.
+
+    Верёвки давно сгнили.
+
+    Здесь удивительно спокойно.
+    `,
+
+    [
+        {
+            text:"Идти дальше",
+            action:ghoulField
+        },
+
+        {
+            text:"Назад",
+            action:surdal
+        }
+    ]
+
+    );
+}
+
+let ghouls = [];
+
+function ghoulField(){
+
+    if(!player.weapon){
+
+        showScene(
+
+        `
+        Впереди вурдалаки.
+
+        Без оружия туда лучше
+        не соваться.
+        `,
+
+        [
+            {
+                text:"Назад",
+                action:surdal
+            }
+        ]
+
+        );
+
+        return;
+    }
+
+    ghouls = [40,40,40];
+
+    ghoulBattle();
+}
+
+function weaponDamage(){
+
+    if(player.weapon==="Кинжал") return 10;
+    if(player.weapon==="Меч") return 20;
+    if(player.weapon==="Топор") return 30;
+
+    return 1;
+}
+
+function ghoulBattle(){
+
+    let alive =
+    ghouls.findIndex(h=>h>0);
+
+    if(alive===-1){
+
+        flags.flower = true;
+
+        gainXP(100);
+
+        showScene(
+
+        `
+        Все вурдалаки повержены.
+
+        Вы находите Злотоцвет.
+
+        Опыт +100.
+        `,
+
+        [
+            {
+                text:"К алхимику",
+                action:alchemist
+            }
+        ]
+
+        );
+
+        return;
+    }
+
+    showScene(
+
+    `
+    Вурдалак №${alive+1}
+
+    HP: ${ghouls[alive]}/40
+
+    Ваше HP:
+    ${player.hp}/${player.maxHp}
+    `,
+
+    [
+        {
+            text:"Атаковать",
+            action:function(){
+
+                ghouls[alive] -=
+                weaponDamage();
+
+                if(ghouls[alive] > 0){
+
+                    player.hp -= 11;
+
+                    if(player.hp <= 0){
+
+                        gameOver(
+                        "Вурдалаки убили вас."
+                        );
+
+                        return;
+                    }
+                }
+
+                ghoulBattle();
+            }
+        }
+    ]
+
+    );
+}
+
+function farm(){
+
+    showScene(
+
+    `
+    Ферма Шорфирина.
+    `,
+
+    [
+        {
+            text:"Яблоко (5 меди)",
+            action:function(){
+
+                if(player.copper>=5){
+
+                    player.copper-=5;
+
+                    player.hp =
+                    Math.min(
+                    player.maxHp,
+                    player.hp+24
+                    );
+                }
+
+                farm();
+            }
+        },
+
+        {
+            text:"Сыр (10 меди)",
+            action:function(){
+
+                if(player.copper>=10){
+
+                    player.copper-=10;
+
+                    player.hp =
+                    Math.min(
+                    player.maxHp,
+                    player.hp+40
+                    );
+                }
+
+                farm();
+            }
+        },
+
+        {
+            text:"Молоко (7 меди)",
+            action:function(){
+
+                if(player.copper>=7){
+
+                    player.copper-=7;
+
+                    player.hp =
+                    Math.min(
+                    player.maxHp,
+                    player.hp+34
+                    );
+                }
+
+                farm();
+            }
+        },
+
+        {
+            text:"Назад",
+            action:surdal
+        }
+    ]
+
+    );
+}
+
+function blacksmith(){
+
+    showScene(
+
+    `
+    Кузница Сурдаля.
+    `,
+
+    [
+        {
+            text:"Кинжал (7 золота)",
+            action:function(){
+
+                if(player.gold>=7){
+
+                    player.gold-=7;
+                    player.weapon="Кинжал";
+                }
+
+                blacksmith();
+            }
+        },
+
+        {
+            text:"Меч (10 золота)",
+            action:function(){
+
+                if(player.gold>=10){
+
+                    player.gold-=10;
+                    player.weapon="Меч";
+                }
+
+                blacksmith();
+            }
+        },
+
+        {
+            text:"Топор (15 золота)",
+            action:function(){
+
+                if(player.gold>=15){
+
+                    player.gold-=15;
+                    player.weapon="Топор";
+                }
+
+                blacksmith();
+            }
+        },
+
+        {
+            text:"Назад",
+            action:surdal
+        }
+    ]
+
+    );
+}
+
+function checkDeath(){
+
+    if(player.hp<=0){
+
+        gameOver(
+        "Вы погибли."
+        );
+    }
+}
+
+function gameOver(text){
+
+    showScene(
+
+    `
+    ${text}
+
+    ИГРА ОКОНЧЕНА.
+    `,
+
+    [
+        {
+            text:"Начать заново",
+            action:function(){
+
+                location.reload();
+            }
+        }
+    ]
+
+    );
+}
+
+startGame();
+
+</script>
+</body>
+</html>
